@@ -2,26 +2,28 @@
 
 import 'dart:io';
 import 'dart:async';
+import 'package:logger/logger.dart';
 
-// Simple status checker without Flutter dependencies
+final logger = Logger();
+
 void main(List<String> args) async {
-  print('🔍 فحص حالة تطبيق دكتورك / DoctoraK');
-  print('=' * 50);
-  print('');
+  logger.i('🔍 فحص حالة تطبيق دكتورك / DoctoraK');
+  logger.i('=' * 50);
+  logger.i('');
 
   await checkProjectStructure();
   await checkDependencies();
   await checkDatabaseFiles();
   await checkAssets();
   await checkConfiguration();
-  
-  print('');
-  print('✅ انتهى فحص حالة التطبيق');
+
+  logger.i('');
+  logger.i('✅ انتهى فحص حالة التطبيق');
 }
 
 Future<void> checkProjectStructure() async {
-  print('📁 فحص هيكل المشروع:');
-  
+  logger.i('📁 فحص هيكل المشروع:');
+
   final requiredDirs = [
     'lib',
     'lib/models',
@@ -34,7 +36,7 @@ Future<void> checkProjectStructure() async {
     'android',
     'android/app',
   ];
-  
+
   final requiredFiles = [
     'pubspec.yaml',
     'lib/main.dart',
@@ -43,36 +45,32 @@ Future<void> checkProjectStructure() async {
     'lib/providers/app_provider.dart',
     'android/app/build.gradle.kts',
   ];
-  
+
   for (final dir in requiredDirs) {
     final directory = Directory(dir);
-    if (await directory.exists()) {
-      print('   ✅ $dir');
-    } else {
-      print('   ❌ $dir (مفقود)');
-    }
+    (await directory.exists())
+        ? logger.i('   ✅ $dir')
+        : logger.e('   ❌ $dir (مفقود)');
   }
-  
+
   for (final file in requiredFiles) {
     final fileObj = File(file);
-    if (await fileObj.exists()) {
-      print('   ✅ $file');
-    } else {
-      print('   ❌ $file (مفقود)');
-    }
+    (await fileObj.exists())
+        ? logger.i('   ✅ $file')
+        : logger.e('   ❌ $file (مفقود)');
   }
-  
-  print('');
+
+  logger.i('');
 }
 
 Future<void> checkDependencies() async {
-  print('📦 فحص التبعيات:');
-  
+  logger.i('📦 فحص التبعيات:');
+
   try {
     final pubspecFile = File('pubspec.yaml');
     if (await pubspecFile.exists()) {
       final content = await pubspecFile.readAsString();
-      
+
       final requiredDeps = [
         'flutter:',
         'sqflite:',
@@ -82,15 +80,13 @@ Future<void> checkDependencies() async {
         'intl:',
         'path:',
       ];
-      
+
       for (final dep in requiredDeps) {
-        if (content.contains(dep)) {
-          print('   ✅ $dep');
-        } else {
-          print('   ❌ $dep (مفقود)');
-        }
+        content.contains(dep)
+            ? logger.i('   ✅ $dep')
+            : logger.e('   ❌ $dep (مفقود)');
       }
-      
+
       // Check for removed dependencies
       final removedDeps = [
         'page_transition:',
@@ -101,174 +97,141 @@ Future<void> checkDependencies() async {
         'animations:',
         'flutter_staggered_grid_view:',
       ];
-      
-      print('   🗑️ التبعيات المحذوفة:');
+
+      logger.i('   🗑️ التبعيات المحذوفة:');
       for (final dep in removedDeps) {
-        if (!content.contains(dep)) {
-          print('   ✅ $dep (محذوف بنجاح)');
-        } else {
-          print('   ⚠️ $dep (لا يزال موجود)');
-        }
+        content.contains(dep)
+            ? logger.w('   ⚠️ $dep (لا يزال موجود)')
+            : logger.i('   ✅ $dep (محذوف بنجاح)');
       }
-      
     } else {
-      print('   ❌ pubspec.yaml غير موجود');
+      logger.e('   ❌ pubspec.yaml غير موجود');
     }
   } catch (e) {
-    print('   ❌ خطأ في فحص التبعيات: $e');
+    logger.e('   ❌ خطأ في فحص التبعيات: $e');
   }
-  
-  print('');
+
+  logger.i('');
 }
 
 Future<void> checkDatabaseFiles() async {
-  print('💾 فحص ملفات قاعدة البيانات:');
-  
+  logger.i('💾 فحص ملفات قاعدة البيانات:');
+
   final dbServiceFile = File('lib/services/database_service.dart');
   if (await dbServiceFile.exists()) {
     try {
       final content = await dbServiceFile.readAsString();
-      
-      // Check database version
+
       if (content.contains('version: 2')) {
-        print('   ✅ إصدار قاعدة البيانات: 2');
+        logger.i('   ✅ إصدار قاعدة البيانات: 2');
       } else {
-        print('   ⚠️ إصدار قاعدة البيانات قديم');
+        logger.w('   ⚠️ إصدار قاعدة البيانات قديم');
       }
-      
-      // Check tables
+
       final tables = ['drugs', 'health_tips', 'symptoms', 'user_profiles'];
       for (final table in tables) {
-        if (content.contains('CREATE TABLE $table')) {
-          print('   ✅ جدول $table');
-        } else {
-          print('   ❌ جدول $table (مفقود)');
-        }
+        content.contains('CREATE TABLE $table')
+            ? logger.i('   ✅ جدول $table')
+            : logger.e('   ❌ جدول $table (مفقود)');
       }
-      
-      // Check indexes
-      if (content.contains('CREATE INDEX')) {
-        print('   ✅ فهارس قاعدة البيانات');
-      } else {
-        print('   ⚠️ فهارس قاعدة البيانات مفقودة');
-      }
-      
+
+      content.contains('CREATE INDEX')
+          ? logger.i('   ✅ فهارس قاعدة البيانات')
+          : logger.w('   ⚠️ فهارس قاعدة البيانات مفقودة');
     } catch (e) {
-      print('   ❌ خطأ في قراءة ملف قاعدة البيانات: $e');
+      logger.e('   ❌ خطأ في قراءة ملف قاعدة البيانات: $e');
     }
   } else {
-    print('   ❌ ملف خدمة قاعدة البيانات مفقود');
+    logger.e('   ❌ ملف خدمة قاعدة البيانات مفقود');
   }
-  
-  print('');
+
+  logger.i('');
 }
 
 Future<void> checkAssets() async {
-  print('🖼️ فحص الأصول:');
-  
-  // Check if assets directory exists
+  logger.i('🖼️ فحص الأصول:');
+
   final assetsDir = Directory('assets');
   if (await assetsDir.exists()) {
-    print('   ✅ مجلد assets موجود');
-    
-    // Check subdirectories
+    logger.i('   ✅ مجلد assets موجود');
+
     final subDirs = ['images', 'icons'];
     for (final subDir in subDirs) {
       final dir = Directory('assets/$subDir');
       if (await dir.exists()) {
         final files = await dir.list().length;
-        print('   ✅ assets/$subDir ($files ملف)');
+        logger.i('   ✅ assets/$subDir ($files ملف)');
       } else {
-        print('   ⚠️ assets/$subDir (مفقود)');
+        logger.w('   ⚠️ assets/$subDir (مفقود)');
       }
     }
   } else {
-    print('   ⚠️ مجلد assets غير موجود');
+    logger.w('   ⚠️ مجلد assets غير موجود');
   }
-  
-  // Check pubspec.yaml for assets configuration
+
   try {
     final pubspecFile = File('pubspec.yaml');
     if (await pubspecFile.exists()) {
       final content = await pubspecFile.readAsString();
-      if (content.contains('assets:')) {
-        print('   ✅ تكوين الأصول في pubspec.yaml');
-      } else {
-        print('   ⚠️ تكوين الأصول مفقود في pubspec.yaml');
-      }
+      content.contains('assets:')
+          ? logger.i('   ✅ تكوين الأصول في pubspec.yaml')
+          : logger.w('   ⚠️ تكوين الأصول مفقود في pubspec.yaml');
     }
   } catch (e) {
-    print('   ❌ خطأ في فحص تكوين الأصول: $e');
+    logger.e('   ❌ خطأ في فحص تكوين الأصول: $e');
   }
-  
-  print('');
+
+  logger.i('');
 }
 
 Future<void> checkConfiguration() async {
-  print('⚙️ فحص التكوين:');
-  
-  // Check Android configuration
+  logger.i('⚙️ فحص التكوين:');
+
   final androidBuildFile = File('android/app/build.gradle.kts');
   if (await androidBuildFile.exists()) {
     try {
       final content = await androidBuildFile.readAsString();
-      
-      if (content.contains('applicationId')) {
-        print('   ✅ معرف التطبيق Android');
-      } else {
-        print('   ❌ معرف التطبيق Android مفقود');
-      }
-      
-      if (content.contains('minSdk')) {
-        print('   ✅ إعدادات SDK Android');
-      } else {
-        print('   ❌ إعدادات SDK Android مفقودة');
-      }
-      
-      // Check optimization settings
-      if (content.contains('isMinifyEnabled')) {
-        print('   ✅ إعدادات التحسين');
-      } else {
-        print('   ⚠️ إعدادات التحسين مفقودة');
-      }
-      
+
+      content.contains('applicationId')
+          ? logger.i('   ✅ معرف التطبيق Android')
+          : logger.e('   ❌ معرف التطبيق Android مفقود');
+
+      content.contains('minSdk')
+          ? logger.i('   ✅ إعدادات SDK Android')
+          : logger.e('   ❌ إعدادات SDK Android مفقودة');
+
+      content.contains('isMinifyEnabled')
+          ? logger.i('   ✅ إعدادات التحسين')
+          : logger.w('   ⚠️ إعدادات التحسين مفقودة');
     } catch (e) {
-      print('   ❌ خطأ في فحص تكوين Android: $e');
+      logger.e('   ❌ خطأ في فحص تكوين Android: $e');
     }
   } else {
-    print('   ❌ ملف تكوين Android مفقود');
+    logger.e('   ❌ ملف تكوين Android مفقود');
   }
-  
-  // Check main.dart
+
   final mainFile = File('lib/main.dart');
   if (await mainFile.exists()) {
     try {
       final content = await mainFile.readAsString();
-      
-      if (content.contains('دكتورك') || content.contains('DoctoraK')) {
-        print('   ✅ اسم التطبيق صحيح');
-      } else {
-        print('   ⚠️ اسم التطبيق قد يحتاج تحديث');
-      }
-      
-      if (content.contains('MaterialApp')) {
-        print('   ✅ تكوين Material App');
-      } else {
-        print('   ❌ تكوين Material App مفقود');
-      }
-      
-      if (content.contains('Provider')) {
-        print('   ✅ تكوين Provider');
-      } else {
-        print('   ❌ تكوين Provider مفقود');
-      }
-      
+
+      (content.contains('دكتورك') || content.contains('DoctoraK'))
+          ? logger.i('   ✅ اسم التطبيق صحيح')
+          : logger.w('   ⚠️ اسم التطبيق قد يحتاج تحديث');
+
+      content.contains('MaterialApp')
+          ? logger.i('   ✅ تكوين Material App')
+          : logger.e('   ❌ تكوين Material App مفقود');
+
+      content.contains('Provider')
+          ? logger.i('   ✅ تكوين Provider')
+          : logger.e('   ❌ تكوين Provider مفقود');
     } catch (e) {
-      print('   ❌ خطأ في فحص main.dart: $e');
+      logger.e('   ❌ خطأ في فحص main.dart: $e');
     }
   } else {
-    print('   ❌ ملف main.dart مفقود');
+    logger.e('   ❌ ملف main.dart مفقود');
   }
-  
-  print('');
+
+  logger.i('');
 }
