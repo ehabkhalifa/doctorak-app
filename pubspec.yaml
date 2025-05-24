@@ -18,6 +18,7 @@ dependencies:
   shimmer: ^3.0.0
   flutter_animate: ^4.5.0
   google_fonts: ^6.1.0
+  logger: ^2.0.2  # تم إضافته هنا بشكل صحيح
 
 dev_dependencies:
   flutter_test:
@@ -26,6 +27,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-dependencies:
-  logger: ^2.0.2
- 
