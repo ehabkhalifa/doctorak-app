@@ -26,5 +26,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
+dependencies:
+  logger: ^2.0.2
  
