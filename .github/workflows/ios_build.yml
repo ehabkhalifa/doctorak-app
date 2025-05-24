@@ -1,0 +1,114 @@
+name: 📱 DoctoraK iOS Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build_ios:
+    name: Build iOS App
+    runs-on: macos-latest
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: 🔧 Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: 🐦 Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.32.0'
+        channel: 'stable'
+        cache: true
+        
+    - name: 📦 Install dependencies
+      run: flutter pub get
+      
+    - name: 🔍 Analyze code
+      run: flutter analyze
+      
+    - name: 🧪 Run tests
+      run: flutter test
+      
+    - name: 📱 Build iOS (Debug)
+      run: |
+        flutter build ios --debug --no-codesign
+        
+    - name: 📊 Upload build artifacts
+      uses: actions/upload-artifact@v3
+      if: success()
+      with:
+        name: ios-debug-build
+        path: build/ios/
+        retention-days: 7
+        
+    - name: 📝 Build summary
+      if: always()
+      run: |
+        echo "## 📱 iOS Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **App Name:** دكتورك - DoctoraK" >> $GITHUB_STEP_SUMMARY
+        echo "- **Bundle ID:** com.doctorak.healthapp" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Type:** Debug" >> $GITHUB_STEP_SUMMARY
+        echo "- **Flutter Version:** 3.32.0" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+  # Job للبناء للإنتاج (يتطلب إعدادات إضافية)
+  build_ios_release:
+    name: Build iOS Release (Manual)
+    runs-on: macos-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: 🐦 Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.32.0'
+        channel: 'stable'
+        cache: true
+        
+    - name: 📦 Install dependencies
+      run: flutter pub get
+      
+    - name: 🔍 Analyze code
+      run: flutter analyze
+      
+    - name: 🧪 Run tests
+      run: flutter test
+      
+    - name: 📱 Build iOS (Release)
+      run: |
+        flutter build ios --release --no-codesign
+        
+    - name: 📊 Upload release artifacts
+      uses: actions/upload-artifact@v3
+      if: success()
+      with:
+        name: ios-release-build
+        path: build/ios/
+        retention-days: 30
+        
+    - name: 📝 Release summary
+      if: always()
+      run: |
+        echo "## 🚀 iOS Release Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **App Name:** دكتورك - DoctoraK" >> $GITHUB_STEP_SUMMARY
+        echo "- **Bundle ID:** com.doctorak.healthapp" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Type:** Release" >> $GITHUB_STEP_SUMMARY
+        echo "- **Flutter Version:** 3.32.0" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📋 Next Steps:" >> $GITHUB_STEP_SUMMARY
+        echo "1. Download the build artifacts" >> $GITHUB_STEP_SUMMARY
+        echo "2. Open in Xcode for signing" >> $GITHUB_STEP_SUMMARY
+        echo "3. Archive and upload to App Store Connect" >> $GITHUB_STEP_SUMMARY

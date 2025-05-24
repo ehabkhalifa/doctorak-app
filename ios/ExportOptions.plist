@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- طريقة التوزيع -->
+	<key>method</key>
+	<string>development</string>
+	
+	<!-- معرف الفريق -->
+	<key>teamID</key>
+	<string>YOUR_TEAM_ID</string>
+	
+	<!-- رفع الرموز -->
+	<key>uploadBitcode</key>
+	<false/>
+	
+	<!-- رفع الرموز للتشخيص -->
+	<key>uploadSymbols</key>
+	<true/>
+	
+	<!-- ضغط التطبيق -->
+	<key>compileBitcode</key>
+	<false/>
+	
+	<!-- إعدادات التوقيع -->
+	<key>signingStyle</key>
+	<string>automatic</string>
+	
+	<!-- إعدادات التوقيع لكل Bundle ID -->
+	<key>signingCertificate</key>
+	<string>iPhone Developer</string>
+	
+	<!-- إعدادات الـ Provisioning Profile -->
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>com.doctorak.healthapp</key>
+		<string>YOUR_PROVISIONING_PROFILE_NAME</string>
+	</dict>
+	
+	<!-- إعدادات التطبيق -->
+	<key>destination</key>
+	<string>export</string>
+	
+	<!-- تشغيل على الجهاز -->
+	<key>thinning</key>
+	<string>&lt;none&gt;</string>
+	
+	<!-- إعدادات الأمان -->
+	<key>stripSwiftSymbols</key>
+	<true/>
+	
+	<!-- معلومات إضافية -->
+	<key>manifest</key>
+	<dict>
+		<key>appURL</key>
+		<string>https://doctorak.app/download/app.ipa</string>
+		<key>displayImageURL</key>
+		<string>https://doctorak.app/images/icon-57.png</string>
+		<key>fullSizeImageURL</key>
+		<string>https://doctorak.app/images/icon-512.png</string>
+	</dict>
+</dict>
+</plist>

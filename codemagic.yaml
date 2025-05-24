@@ -1,0 +1,148 @@
+# 🚀 Codemagic CI/CD Configuration for DoctoraK iOS Build
+# يمكن استخدام هذا الملف لبناء التطبيق على iOS باستخدام Codemagic
+
+workflows:
+  # Workflow لإنشاء IPA بدون نشر (للاختبار)
+  ios-build-ipa:
+    name: DoctoraK iOS IPA Build
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      ios_signing:
+        distribution_type: development
+        bundle_identifier: com.doctorak.healthapp
+      vars:
+        APP_NAME: "دكتورك - DoctoraK"
+        BUNDLE_ID: "com.doctorak.healthapp"
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios && pod install
+      - name: Flutter analyze
+        script: |
+          flutter analyze
+      - name: Flutter unit tests
+        script: |
+          flutter test
+      - name: Build Flutter for iOS
+        script: |
+          flutter build ios --release --no-codesign
+      - name: Build iOS IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace ios/Runner.xcworkspace \
+            --scheme Runner \
+            --archive-flags="-destination 'generic/platform=iOS'" \
+            --export-options-plist ios/ExportOptions.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      email:
+        recipients:
+          - developer@doctorak.app
+        notify:
+          success: true
+          failure: true
+
+  # Workflow للنشر على App Store
+  ios-workflow:
+    name: DoctoraK iOS App Store Build
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: codemagic_credentials
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.doctorak.healthapp
+      vars:
+        APP_NAME: "دكتورك - DoctoraK"
+        BUNDLE_ID: "com.doctorak.healthapp"
+        APP_STORE_APPLE_ID: 1234567890 # يجب تحديثه بعد إنشاء التطبيق
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios && pod install
+      - name: Flutter analyze
+        script: |
+          flutter analyze
+      - name: Flutter unit tests
+        script: |
+          flutter test
+      - name: Build Flutter for iOS
+        script: |
+          flutter build ios --release --no-codesign
+      - name: Build iOS app
+        script: |
+          xcode-project build-ipa \
+            --workspace ios/Runner.xcworkspace \
+            --scheme Runner \
+            --archive-flags="-destination 'generic/platform=iOS'"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+    publishing:
+      email:
+        recipients:
+          - developer@doctorak.app
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testing
+        submit_to_app_store: false
+
+  # Workflow للاختبار فقط (بدون نشر)
+  ios-test-workflow:
+    name: DoctoraK iOS Test Build
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Flutter analyze
+        script: |
+          flutter analyze
+      - name: Flutter unit tests
+        script: |
+          flutter test
+      - name: Build Flutter for iOS (Debug)
+        script: |
+          flutter build ios --debug --no-codesign
+    artifacts:
+      - flutter_drive.log
+    publishing:
+      email:
+        recipients:
+          - developer@doctorak.app
+        notify:
+          success: true
+          failure: true
